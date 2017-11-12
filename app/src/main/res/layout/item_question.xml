@@ -8,7 +8,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
-        android:text="Delete"
+        android:text="Löschen"
+        android:visibility="gone"
         android:onClick="onItemDeleteButtonClicked"/>
 
     <TextView
@@ -22,6 +23,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:onClick="onListItemClicked"
-        android:text="No Title"/>
+        android:text="No Title"
+        style="@style/normalText"/>
 
 </RelativeLayout>

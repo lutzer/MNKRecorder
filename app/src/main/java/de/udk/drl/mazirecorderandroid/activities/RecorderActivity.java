@@ -11,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.InputFilter;
 import android.text.Spanned;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -108,22 +109,23 @@ public class RecorderActivity extends BaseActivity {
 
         // update ui according to recorder state
         subscribers.add(
-                state.distinct().subscribe(new Consumer<RecorderState>() {
+                state.distinctUntilChanged().subscribe(new Consumer<RecorderState>() {
                     @Override
                     public void accept(RecorderState state) throws Exception {
+                        Log.i("STATE",state.toString());
                         if (state == RecorderState.RECORDING) {
-                            textView.setText("Stop Recording");
+                            textView.setText("Aufnahme Stoppen");
                             saveButton.setVisibility(View.INVISIBLE);
                             cancelButton.setVisibility(View.INVISIBLE);
                             recordButton.setChecked(true);
                         } else if (state == RecorderState.STOPPED) {
-                            textView.setText("Continue Recording");
+                            textView.setText("Aufnahme Fortsetzen");
                             saveButton.setVisibility(View.VISIBLE);
                             cancelButton.setVisibility(View.VISIBLE);
                             recordButton.setChecked(false);
                             waveformView.clearAudioData();
                         } else {
-                            textView.setText("Start Recording");
+                            textView.setText("Aufnahme Starten");
                             progressBar.setProgress(0);
                             timerView.setText(convertTimeString(0));
                             saveButton.setVisibility(View.INVISIBLE);

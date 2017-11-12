@@ -20,10 +20,12 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.jakewharton.rxbinding2.widget.RxTextView;
+import com.jakewharton.rxbinding2.widget.RxCompoundButton;
 
 import java.io.File;
 import java.lang.reflect.Array;
@@ -52,6 +54,8 @@ import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
+
+
 public class SynopsisActivity extends BaseActivity {
 
     public static final String PICTURE_FILES_DIRECTORY = "mazi_recorder";
@@ -73,62 +77,49 @@ public class SynopsisActivity extends BaseActivity {
         }
 
         interviewStorage = InterviewStorage.getInstance(this);
+        final EditText editTextName = (EditText) findViewById(R.id.edit_text_name);
+        final EditText editTextRole = (EditText) findViewById(R.id.edit_text_role);
 
-        final EditText editTextSynopsis = (EditText) findViewById(R.id.edit_text_synopsis);
-        final ImageView pictureView = (ImageView) findViewById(R.id.picture_view);
         final Button uploadButton = (Button) findViewById(R.id.upload_button);
-        editTextSynopsis.setText(interviewStorage.interview.text);
 
         // set up rx patterns
-        final Observable<CharSequence> editTextObservable = RxTextView.textChanges(editTextSynopsis);
+        final Observable<CharSequence> editNameObservable = RxTextView.textChanges(editTextName);
+        final Observable<CharSequence> editRoleObservable = RxTextView.textChanges(editTextRole);
 
-        // save synopsis to interview model
         subscribers.add(
-                editTextObservable.debounce(1, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<CharSequence>() {
-                    @Override
-                    public void accept(CharSequence charSequence) throws Exception {
-                        interviewStorage.interview.text = charSequence.toString();
-                        interviewStorage.save();
-                    }
-                })
-        );
-
-        // update image
-        subscribers.add(
-            interviewStorage.skipWhile(new Predicate<InterviewModel>() {
+            Observable.combineLatest(editNameObservable, editRoleObservable,
+                    new BiFunction<CharSequence, CharSequence, ArrayList<CharSequence>>() {
+                        @Override
+                        public ArrayList<CharSequence> apply(CharSequence charSequence1, CharSequence charSequence2) throws Exception {
+                            ArrayList<CharSequence> list = new ArrayList();
+                            list.add(charSequence1);
+                            list.add(charSequence2);
+                            return list;
+                        }
+            }).subscribe(new Consumer<ArrayList<CharSequence>>() {
                 @Override
-                public boolean test(InterviewModel interviewModel) throws Exception {
-                    return interviewModel.imageFile == null;
-                }
-            }).map(new Function<InterviewModel, String>() {
-                @Override
-                public String apply(InterviewModel interviewModel) throws Exception {
-                    return interviewModel.imageFile;
-                }
-            }).retry().distinct().map(new Function<String, Bitmap>() {
-                @Override
-                public Bitmap apply(String path) throws Exception {
-                    Bitmap bmp = BitmapFactory.decodeFile(path);
-                    Bitmap scaledBmp = Utils.scaleBitmap(bmp, 256, 256);
-                    return scaledBmp;
-                }
-            }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<Bitmap>() {
-                @Override
-                public void accept(Bitmap bitmap) throws Exception {
-                    pictureView.setImageBitmap(bitmap);
+                public void accept(ArrayList<CharSequence> charSequences) throws Exception {
+                    interviewStorage.interview.name = charSequences.get(0).toString();
+                    interviewStorage.interview.role = charSequences.get(1).toString();
+                    interviewStorage.save();
                 }
             })
         );
 
+        final CheckBox checkBox = (CheckBox) findViewById(R.id.checkbox);
+
+        final Observable<Boolean> checkBoxObservable = RxCompoundButton.checkedChanges(checkBox);
+
         //set upload button state
         subscribers.add(
-            interviewStorage.map(new Function<InterviewModel, Boolean>() {
+            Observable.combineLatest(interviewStorage, checkBoxObservable, new BiFunction<InterviewModel, Boolean, Boolean>() {
                 @Override
-                public Boolean apply(InterviewModel interviewModel) throws Exception {
-                    return (interviewModel.text.length() >= MIN_INPUT_LENGTH && interviewModel.imageFile != null);
-                }
-            }).subscribe(new Consumer<Boolean>() {
+                public Boolean apply(InterviewModel interviewModel, Boolean checked) throws Exception {
+                    return (interviewModel.name.length() >= MIN_INPUT_LENGTH
+                            && checked
+                    );
+                }}
+            ).subscribe(new Consumer<Boolean>() {
                 @Override
                 public void accept(Boolean enable) throws Exception {
                     uploadButton.setEnabled(enable);
@@ -143,45 +134,6 @@ public class SynopsisActivity extends BaseActivity {
 
         Intent intent = new Intent(this, UploadActivity.class);
         startActivity(intent);
-    }
-
-    public void onImageButtonClicked(View view) {
-
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            showAlert("Warning", "Cant access the device's camera.");
-            return;
-        }
-
-        // Create the File where the photo should go
-        imageFile = getOutputMediaFileName();
-
-        // start the image capture activity
-        if (imageFile != null) {
-            Uri file = Uri.fromFile(imageFile);
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, file);
-            if (takePictureIntent.resolveActivity(getPackageManager()) != null)
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_CODE);
-        } else {
-            showAlert("Error", "Could not create image file.");
-        }
-    }
-
-    private static File getOutputMediaFileName() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),PICTURE_FILES_DIRECTORY);
-
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                return null;
-            }
-        }
-        // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-
-        File mediaFile;
-        mediaFile = new File(mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg");
-
-        return mediaFile;
     }
 
     @Override

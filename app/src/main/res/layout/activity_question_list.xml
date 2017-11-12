@@ -22,9 +22,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Add&#10;Question"
-            android:background="@color/colorButtonDark"
-            android:onClick="onAddQuestionButtonClicked"
+            android:text="Aufnahmen Löschen"
+            android:background="@color/colorCancel"
+            android:onClick="onDeleteButtonClicked"
             style="@style/textButtonStyle"/>
 
 
@@ -33,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Write&#10;Synopsis"
+            android:text="Aufnahmen Hochladen"
             android:onClick="onSynopsisButtonClicked"
             android:background="@color/colorDone"
             style="@style/textButtonStyle"/>
@@ -50,7 +50,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Questions"
+            android:text="Themenbereiche"
             style="@style/titleText"/>
 
         <ListView

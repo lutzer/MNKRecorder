@@ -19,7 +19,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.MainActivity">
+        <activity android:name=".activities.StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -39,7 +39,7 @@
             android:name=".activities.SynopsisActivity"
             android:label="@string/title_activity_synopsis"
             android:theme="@style/AppTheme" />
-        <activity android:name=".activities.UploadActivity"></activity>
+        <activity android:name=".activities.UploadActivity" />
     </application>
 
 </manifest>

@@ -2,6 +2,7 @@ package de.udk.drl.mazirecorderandroid.network;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -35,7 +36,8 @@ import retrofit2.http.Path;
 public class InterviewUploader {
 
 
-    public static final String APP_BASE_URL = "http://local.mazizone.eu:9091/";
+//    public static final String APP_BASE_URL = "http://local.mazizone.eu:9091/";
+    public static final String APP_BASE_URL = "http://192.168.0.122:8081/";
     public static final String API_BASE_URL = APP_BASE_URL + "api/";
 
     public static final String API_DATE_FORMAT = "yyyy-MM-dd";
@@ -106,28 +108,29 @@ public class InterviewUploader {
 
         // first post interview
         return service.postInterview(interview.name, interview.role, interview.text).map(new ConvertToJsonFunction())
-                .flatMap(new Function<JSONObject, Observable<ResponseBody>>() {
-                    // upload image
-                    @Override
-                    public Observable<ResponseBody> apply(JSONObject json) throws Exception {
-                        String id = json.getJSONObject("interview").getString("_id");
-
-                        if (interview.imageFile == null)
-                            return Observable.empty();
-                        File file = new File(interview.imageFile);
-
-                        if (!file.exists())
-                            return Observable.empty();
-
-                        MultipartBody.Part image = prepareFilePart("file", file);
-                        return service.uploadImage(id, image);
-                    }
-                }).map(new ConvertToJsonFunction())
+//                .flatMap(new Function<JSONObject, Observable<ResponseBody>>() {
+//                    // upload image
+//                    @Override
+//                    public Observable<ResponseBody> apply(JSONObject json) throws Exception {
+//                        String id = json.getJSONObject("interview").getString("_id");
+//
+//                        if (interview.imageFile == null)
+//                            return Observable.empty();
+//                        File file = new File(interview.imageFile);
+//
+//                        if (!file.exists())
+//                            return Observable.empty();
+//
+//                        MultipartBody.Part image = prepareFilePart("file", file);
+//                        return service.uploadImage(id, image);
+//                    }
+//                }).map(new ConvertToJsonFunction())
                 .flatMapIterable(new Function<JSONObject, Iterable<AttachmentModel>>() {
                     // create list of attachments
                     @Override
                     public Iterable<AttachmentModel> apply(JSONObject json) throws Exception {
-                        String id = json.getString("_id");
+                        Log.i("JSON",json.toString());
+                        String id = json.getJSONObject("interview").getString("_id");
                         for (AttachmentModel attachments : interview.attachments)
                             attachments.interviewId = id;
                         return interview.attachments;

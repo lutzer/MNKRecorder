@@ -64,8 +64,8 @@ public class UploadActivity extends BaseActivity {
                 findViewById(R.id.uploading_layout).setVisibility(View.GONE);
                 findViewById(R.id.done_layout).setVisibility(View.VISIBLE);
 
-                TextView linkText = (TextView) findViewById(R.id.link_text);
-                linkText.setText(InterviewUploader.APP_BASE_URL);
+//                TextView linkText = (TextView) findViewById(R.id.link_text);
+//                linkText.setText(InterviewUploader.APP_BASE_URL);
             }
 
             @Override
@@ -94,7 +94,7 @@ public class UploadActivity extends BaseActivity {
     }
 
     public void onBackButtonClicked(View view) {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, StartActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
 

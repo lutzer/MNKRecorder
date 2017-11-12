@@ -5,9 +5,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -28,10 +30,12 @@ import de.udk.drl.mazirecorderandroid.models.QuestionStorage;
 
 import de.udk.drl.mazirecorderandroid.R;
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 public class QuestionListActivity extends BaseActivity {
 
@@ -63,7 +67,7 @@ public class QuestionListActivity extends BaseActivity {
                     public ArrayList<QuestionModel> apply(ArrayList<QuestionModel> questionModels, InterviewModel interviewModel) throws Exception {
                         return questionModels;
                     }
-                }).subscribe(new Consumer<ArrayList<QuestionModel>>() {
+                }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<ArrayList<QuestionModel>>() {
                     @Override
                     public void accept(ArrayList<QuestionModel> questionModels) throws Exception {
                         QuestionAdapter adapter = new QuestionAdapter(QuestionListActivity.this, R.layout.item_question, questionModels);
@@ -71,54 +75,23 @@ public class QuestionListActivity extends BaseActivity {
                     }
                 })
         );
+
+        // activate upload button only when there is at least one recording
+        final Button uploadButton = (Button) findViewById(R.id.synopsis_button);
+        subscribers.add(
+                interviewStorage.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<InterviewModel>() {
+                    @Override
+                    public void accept(InterviewModel model) {
+                        uploadButton.setEnabled(model.attachments.size() > 0);
+                    }
+                })
+        );
     }
 
-    public void onAddQuestionButtonClicked(final View view) {
+    public void onDeleteButtonClicked(final View view) {
 
-        // custom dialog
-        final Dialog dialog = new Dialog(this);
-
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_question);
-
-        final EditText input = (EditText) dialog.findViewById(R.id.edit_text_question);
-        final Button accept = (Button) dialog.findViewById(R.id.ok_button);
-        final Button reject = (Button) dialog.findViewById(R.id.cancel_button);
-
-        final Observable<CharSequence> editTextObservable = RxTextView.textChanges(input);
-
-        final Disposable dialogSubscriber = editTextObservable.subscribe(new Consumer<CharSequence>() {
-            @Override
-            public void accept(CharSequence charSequence) throws Exception {
-                accept.setEnabled(charSequence.length() > MIN_INPUT_LENGTH);
-            }
-        });
-
-        accept.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                QuestionModel question = new QuestionModel();
-                question.text = input.getText().toString();
-                questionStorage.add(question);
-                dialog.dismiss();
-            }
-        });
-
-        reject.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.dismiss();
-            }
-        });
-
-        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialogInterface) {
-                dialogSubscriber.dispose();
-            }
-        });
-
-        dialog.show();
+        interviewStorage.reset();
+        finish();
 
     }
 

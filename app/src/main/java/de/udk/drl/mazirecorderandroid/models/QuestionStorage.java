@@ -56,12 +56,12 @@ public class QuestionStorage extends Observable<ArrayList<QuestionModel>> {
     }
 
     private void save() {
-        SharedPreferences.Editor prefsEditor = storage.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(questions.toArray());
-        prefsEditor.putString(QUESTION_STORAGE_ITEM, json);
-        prefsEditor.commit();
-        observable.onNext(questions);
+//        SharedPreferences.Editor prefsEditor = storage.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(questions.toArray());
+//        prefsEditor.putString(QUESTION_STORAGE_ITEM, json);
+//        prefsEditor.commit();
+//        observable.onNext(questions);
     }
 
     private void load() {
@@ -74,6 +74,13 @@ public class QuestionStorage extends Observable<ArrayList<QuestionModel>> {
         } else {
             questions = new ArrayList<>();
         }
+
+        questions = new ArrayList<>();
+        questions.add( new QuestionModel("Ein besonderes Objekt") );
+        questions.add( new QuestionModel("Geschichte des Hauses") );
+        questions.add( new QuestionModel("Ein besonderes Erlebnis") );
+        questions.add( new QuestionModel("Die Arbeit am Museum") );
+
         observable.onNext(questions);
     }
 

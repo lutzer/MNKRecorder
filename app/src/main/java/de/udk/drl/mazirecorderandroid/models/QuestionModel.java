@@ -9,4 +9,10 @@ public class QuestionModel {
     public String _id;
     public String text;
 
+    public QuestionModel() {}
+
+    public QuestionModel(String text) {
+        this.text = text;
+    }
+
 }
